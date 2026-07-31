@@ -1,5 +1,7 @@
 """学习进度相关 API"""
-from fastapi import APIRouter, Depends, HTTPException
+from datetime import date
+
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -30,6 +32,7 @@ class CompleteRequest(BaseModel):
 @router.get("/today")
 async def get_today_words(
     word_list_id: int,
+    count: int = Query(0, ge=0, le=200, description="学习数量，0表示仅查询不创建记录"),
     db: AsyncSession = Depends(get_db),
 ):
     """获取今日学习单词"""
@@ -39,18 +42,33 @@ async def get_today_words(
     if not word_list:
         raise HTTPException(status_code=404, detail="词表不存在")
 
-    words, record = await get_today_study_words(db, word_list_id)
+    word_list_info = {
+        "id": word_list.id,
+        "name": word_list.name,
+        "display_name": word_list.display_name,
+        "target": word_list.target,
+    }
+
+    # count=0: 仅返回词表信息，不创建记录也不查历史
+    if count == 0:
+        return {
+            "record_id": None,
+            "study_date": str(date.today()),
+            "status": "not_started",
+            "word_list": word_list_info,
+            "words": [],
+            "total": 0,
+            "total_available": word_list.word_count,
+        }
+
+    # count>0: 创建或获取学习记录
+    words, record = await get_today_study_words(db, word_list_id, count=count)
 
     return {
         "record_id": record.id,
         "study_date": str(record.study_date),
         "status": record.status,
-        "word_list": {
-            "id": word_list.id,
-            "name": word_list.name,
-            "display_name": word_list.display_name,
-            "target": word_list.target,
-        },
+        "word_list": word_list_info,
         "words": [
             {
                 "id": w.id,
@@ -62,6 +80,7 @@ async def get_today_words(
             for w in words
         ],
         "total": len(words),
+        "total_available": word_list.word_count,
     }
 
 

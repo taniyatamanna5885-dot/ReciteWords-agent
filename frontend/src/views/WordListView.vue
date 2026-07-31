@@ -10,19 +10,23 @@
       <div
         v-for="wl in wordLists"
         :key="wl.id"
-        class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow cursor-pointer"
-        @click="startStudy(wl)"
+        class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
       >
         <div class="flex items-center justify-between mb-2">
           <h2 class="text-lg font-semibold text-gray-800">{{ wl.display_name }}</h2>
-          <span class="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full">
+          <span v-if="wl.target" class="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full">
             {{ wl.target }}
           </span>
         </div>
         <p class="text-sm text-gray-500 mb-4">{{ wl.description }}</p>
         <div class="flex items-center justify-between">
           <span class="text-sm text-gray-400">{{ wl.word_count }} 词</span>
-          <span class="text-sm text-indigo-600 font-medium">开始学习 →</span>
+          <button
+            @click="openWordList(wl)"
+            class="text-sm text-indigo-600 font-medium hover:text-indigo-800"
+          >
+            去背诵 →
+          </button>
         </div>
       </div>
     </div>
@@ -53,7 +57,7 @@ onMounted(async () => {
   }
 })
 
-const startStudy = (wl) => {
+const openWordList = (wl) => {
   router.push(`/study/${wl.id}`)
 }
 </script>

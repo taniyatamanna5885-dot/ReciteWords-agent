@@ -9,10 +9,20 @@ const api = axios.create({
 export const getWordLists = () => api.get('/wordlists')
 export const getWords = (name, page = 1, size = 20) =>
   api.get(`/wordlists/${name}/words`, { params: { page, size } })
+export const uploadWordList = (file, name = '') => {
+  const formData = new FormData()
+  formData.append('file', file)
+  const params = name ? { name } : {}
+  return api.post('/wordlists/upload', formData, {
+    params,
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+}
+export const deleteWordList = (name) => api.delete(`/wordlists/${name}`)
 
 // 学习 API
-export const getTodayWords = (wordListId) =>
-  api.get('/study/today', { params: { word_list_id: wordListId } })
+export const getTodayWords = (wordListId, count = 0) =>
+  api.get('/study/today', { params: { word_list_id: wordListId, count } })
 export const markWord = (wordId, wordListId, known) =>
   api.post('/study/mark', { word_id: wordId, word_list_id: wordListId, known })
 export const completeStudy = (recordId) =>
